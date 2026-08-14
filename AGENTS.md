@@ -27,6 +27,8 @@ Rendering should be designed around the SDL3 GPU API rather than SDL's legacy re
 
 Arch should remain the ECS foundation. Do not introduce a second ECS implementation or build a competing custom ECS layer.
 
+Use the core Arch package directly. Additional Arch ecosystem packages such as Arch.System, Arch.Extended, source-generated system frameworks, or similar orchestration layers should not be introduced unless a concrete requirement is discussed and explicitly justifies them.
+
 ## Architecture Philosophy
 
 Keep the engine architecture small and intentional.
@@ -62,23 +64,33 @@ Game-specific behavior should remain outside the engine whenever possible.
 
 Engine internals may use SDL3, Arch, native handles, GPU resources, and other low-level implementation details.
 
-Game-facing APIs should expose engine concepts rather than unnecessarily leaking SDL3 implementation details.
+SDL3 should generally remain an engine implementation detail. Ordinary game code should interact with engine concepts rather than SDL handles and low-level platform or GPU structures.
+
+Arch is different: it is also part of the game-facing ECS model and may be used directly by game code. Do not create wrappers around Arch entities, worlds, components, queries, or similar concepts merely to hide the Arch dependency.
 
 A useful distinction is:
 
 Game code expresses what it wants to do.
 
-Engine internals determine how that is implemented.
+Engine internals determine how engine infrastructure implements it.
 
-This boundary should remain pragmatic rather than dogmatic. Do not create wrappers merely to hide every SDL type.
+This boundary should remain pragmatic rather than dogmatic. Do not create wrappers merely to hide every SDL or Arch type when doing so provides no architectural value.
 
 ## ECS Direction
 
-Entities are composed from components and processed by systems using Arch.
+Entities are composed from components and processed through Arch queries.
 
 Components should primarily represent state and data.
 
 Systems should contain behavior that operates across relevant entities.
+
+Systems may be ordinary project-owned C# types that group related Arch queries and coordinate their execution. The project does not require an additional system framework merely to organize queries.
+
+A system may contain multiple queries when different entity groups require different behavior. Query composition such as `WithAll`, `WithAny`, and `None` should be used where it makes behavior clearer and avoids unnecessary per-entity branching.
+
+Systems may also coordinate other focused systems or operations when that produces a clearer gameplay flow. Avoid forcing all behavior into a single large query or system.
+
+Do not build a competing abstraction layer over Arch. Arch concepts such as `World`, `Entity`, `Component`, and `QueryDescription` may be used directly where appropriate.
 
 Do not automatically make every engine concept an ECS component.
 
@@ -142,6 +154,8 @@ Internal implementation details may remain lower level.
 Prefer a small dependency surface.
 
 Existing foundational dependencies such as SDL3 and Arch should be used directly and intentionally instead of introducing additional libraries that duplicate their responsibilities.
+
+Use the core Arch package as the ECS dependency. Additional Arch ecosystem packages should only be introduced when a concrete requirement justifies them.
 
 Before adding a new dependency, consider whether the functionality is small enough to implement cleanly within the project.
 

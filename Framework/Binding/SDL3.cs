@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 
-namespace Engine.Binding;
+namespace Framework.Binding;
 
 public static unsafe partial class SDL3
 {

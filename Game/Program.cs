@@ -1,2 +1,10 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿namespace Game;
+
+internal static class Program
+{
+    private static void Main(string[] args)
+    {
+        var game = new Game();
+        game.Run();
+    }
+}
