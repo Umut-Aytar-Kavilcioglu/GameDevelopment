@@ -1,6 +1,7 @@
 using Framework.Graphics;
 using Framework.Input;
 using Framework.Interop;
+using Framework.Time;
 
 namespace Framework;
 
@@ -9,6 +10,8 @@ namespace Framework;
 /// </summary>
 public abstract class Engine
 {
+    private const double NanosecondsPerSecond = 1_000_000_000.0;
+
     private readonly string _windowTitle;
     private readonly int _windowWidth;
     private readonly int _windowHeight;
@@ -16,6 +19,9 @@ public abstract class Engine
     private bool _isRunning;
     private bool _isRunActive;
     private IntPtr _windowHandle;
+    private ulong _startTime;
+    private ulong _previousTime;
+    private ulong _frameCount;
 
     /// <summary>
     /// Creates an engine instance with the window configuration required by the game.
@@ -66,6 +72,8 @@ public abstract class Engine
             gameInitializationStarted = true;
             OnInitialize();
 
+            // Exclude engine and game initialization work from the first frame's elapsed time.
+            ResetTime();
             _isRunning = true;
 
             while (_isRunning)
@@ -77,8 +85,10 @@ public abstract class Engine
                     break;
                 }
 
+                var gameTime = AdvanceTime();
+
                 Keyboard.Update();
-                OnUpdate();
+                OnUpdate(gameTime);
                 OnRender();
             }
         }
@@ -123,7 +133,8 @@ public abstract class Engine
     /// <summary>
     /// Advances game state once per frame after events and keyboard state have been processed.
     /// </summary>
-    protected virtual void OnUpdate() { }
+    /// <param name="gameTime">Timing information for the current frame.</param>
+    protected virtual void OnUpdate(GameTime gameTime) { }
 
     /// <summary>
     /// Allows the game to submit its rendering work for the current frame.
@@ -178,6 +189,25 @@ public abstract class Engine
         }
 
         SDL3.SDL_Quit();
+    }
+
+    private void ResetTime()
+    {
+        _startTime = SDL3.SDL_GetTicksNS();
+        _previousTime = _startTime;
+        _frameCount = 0;
+    }
+
+    private GameTime AdvanceTime()
+    {
+        var currentTime = SDL3.SDL_GetTicksNS();
+        var deltaTime = (currentTime - _previousTime) / NanosecondsPerSecond;
+        var totalTime = (currentTime - _startTime) / NanosecondsPerSecond;
+
+        _previousTime = currentTime;
+        _frameCount++;
+
+        return new GameTime((float)deltaTime, totalTime, _frameCount);
     }
 
     private void ProcessEvents()

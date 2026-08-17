@@ -1,5 +1,6 @@
 using Framework;
 using Framework.Input;
+using Framework.Time;
 
 namespace Game;
 
@@ -18,7 +19,7 @@ public sealed class GameApplication : Engine
         // Create game-owned worlds, entities, assets, and other persistent state here.
     }
 
-    protected override void OnUpdate()
+    protected override void OnUpdate(GameTime gameTime)
     {
         if (Keyboard.IsKeyPressed(Key.Escape))
         {
