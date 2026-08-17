@@ -2,16 +2,24 @@ using Framework.Interop;
 
 namespace Framework.Input;
 
+/// <summary>
+/// Exposes layout-aware keyboard state without leaking SDL types into game code.
+/// </summary>
 public static class Keyboard
 {
+    // Comparing consecutive snapshots provides held, pressed, and released queries without event storage.
     private static readonly bool[] _currentKeys =
         new bool[(int)SDL3.SDL_Scancode.SDL_SCANCODE_COUNT];
 
     private static readonly bool[] _previousKeys =
         new bool[(int)SDL3.SDL_Scancode.SDL_SCANCODE_COUNT];
 
+    /// <summary>
+    /// Captures the latest SDL keyboard snapshot while preserving the previous frame's state.
+    /// </summary>
     internal static void Update()
     {
+        // Preserve the current state before replacing it so edge transitions remain observable.
         Array.Copy(_currentKeys, _previousKeys, _currentKeys.Length);
 
         var keyboardState = SDL3.SDL_GetKeyboardState();
@@ -22,6 +30,9 @@ public static class Keyboard
         }
     }
 
+    /// <summary>
+    /// Determines whether a key is currently held down.
+    /// </summary>
     public static bool IsKeyDown(Key key)
     {
         var scancode = GetScancode(key);
@@ -34,6 +45,9 @@ public static class Keyboard
         return _currentKeys[(int)scancode];
     }
 
+    /// <summary>
+    /// Determines whether a key transitioned from up to down during the current frame.
+    /// </summary>
     public static bool IsKeyPressed(Key key)
     {
         var scancode = GetScancode(key);
@@ -48,6 +62,9 @@ public static class Keyboard
         return _currentKeys[index] && !_previousKeys[index];
     }
 
+    /// <summary>
+    /// Determines whether a key transitioned from down to up during the current frame.
+    /// </summary>
     public static bool IsKeyReleased(Key key)
     {
         var scancode = GetScancode(key);
@@ -64,6 +81,7 @@ public static class Keyboard
 
     private static SDL3.SDL_Scancode GetScancode(Key key)
     {
+        // SDL keyboard snapshots are scancode-indexed, so resolve logical keys through the active layout.
         var keycode = GetKeycode(key);
 
         if (keycode == SDL3.SDL_Keycode.SDLK_UNKNOWN)

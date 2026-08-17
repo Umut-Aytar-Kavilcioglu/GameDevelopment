@@ -1,9 +1,13 @@
 namespace Framework.Input;
 
+/// <summary>
+/// Identifies the logical keyboard keys currently exposed by the framework.
+/// </summary>
 public enum Key
 {
     Unknown,
 
+    // Alphabetic keys.
     A,
     B,
     C,
@@ -31,6 +35,7 @@ public enum Key
     Y,
     Z,
 
+    // Number-row keys; these do not represent numeric keypad keys.
     Num0,
     Num1,
     Num2,
@@ -42,17 +47,20 @@ public enum Key
     Num8,
     Num9,
 
+    // Common control and editing keys.
     Escape,
     Space,
     Enter,
     Tab,
     Backspace,
 
+    // Directional navigation keys.
     Up,
     Down,
     Left,
     Right,
 
+    // Side-specific modifier keys.
     LeftShift,
     RightShift,
     LeftControl,

@@ -4,6 +4,9 @@ using Framework.Interop;
 
 namespace Framework;
 
+/// <summary>
+/// Owns the application lifecycle and coordinates engine subsystems around game-defined hooks.
+/// </summary>
 public abstract class Engine
 {
     private readonly string _windowTitle;
@@ -14,6 +17,9 @@ public abstract class Engine
     private bool _isRunActive;
     private IntPtr _windowHandle;
 
+    /// <summary>
+    /// Creates an engine instance with the window configuration required by the game.
+    /// </summary>
     protected Engine(string windowTitle, int windowWidth, int windowHeight)
     {
         if (string.IsNullOrWhiteSpace(windowTitle))
@@ -36,6 +42,9 @@ public abstract class Engine
         _windowHeight = windowHeight;
     }
 
+    /// <summary>
+    /// Initializes the engine, runs frames until stopped, and deterministically releases resources.
+    /// </summary>
     public void Run()
     {
         if (_isRunActive)
@@ -49,9 +58,11 @@ public abstract class Engine
 
         try
         {
+            // Core teardown is safe after partial initialization, so mark it before entering the method.
             coreInitializationStarted = true;
             InitializeCore();
 
+            // OnShutdown must tolerate partially initialized game state if this hook throws.
             gameInitializationStarted = true;
             OnInitialize();
 
@@ -84,6 +95,7 @@ public abstract class Engine
             }
             finally
             {
+                // Engine-owned native resources must be released even when game cleanup fails.
                 try
                 {
                     if (coreInitializationStarted)
@@ -99,11 +111,33 @@ public abstract class Engine
         }
     }
 
+    /// <summary>
+    /// Allows the game to create its state and resources after all engine subsystems are available.
+    /// </summary>
+    /// <remarks>
+    /// If this method throws, <see cref="OnShutdown"/> is still called. Implementations must support
+    /// cleanup of partially initialized state.
+    /// </remarks>
     protected virtual void OnInitialize() { }
+
+    /// <summary>
+    /// Advances game state once per frame after events and keyboard state have been processed.
+    /// </summary>
     protected virtual void OnUpdate() { }
+
+    /// <summary>
+    /// Allows the game to submit its rendering work for the current frame.
+    /// </summary>
     protected virtual void OnRender() { }
+
+    /// <summary>
+    /// Allows the game to release its resources before engine-owned subsystems are destroyed.
+    /// </summary>
     protected virtual void OnShutdown() { }
 
+    /// <summary>
+    /// Requests a clean exit from the main loop after the current operation completes.
+    /// </summary>
     protected void Stop()
     {
         _isRunning = false;
@@ -111,6 +145,7 @@ public abstract class Engine
 
     private void InitializeCore()
     {
+        // Ownership is established in dependency order: SDL, window, then the GPU renderer.
         Console.WriteLine("Initializing SDL...");
 
         if (!SDL3.SDL_Init(SDL3.SDL_InitFlags.SDL_INIT_VIDEO))
@@ -133,6 +168,7 @@ public abstract class Engine
 
     private void ShutdownCore()
     {
+        // Teardown reverses initialization so no resource outlives a dependency it references.
         Renderer2D.Shutdown();
 
         if (_windowHandle != IntPtr.Zero)
@@ -146,6 +182,7 @@ public abstract class Engine
 
     private void ProcessEvents()
     {
+        // SDL events remain an engine detail; game code receives engine-level state and hooks instead.
         while (SDL3.SDL_PollEvent(out SDL3.SDL_Event sdlEvent))
         {
             var type = (SDL3.SDL_EventType)sdlEvent.type;

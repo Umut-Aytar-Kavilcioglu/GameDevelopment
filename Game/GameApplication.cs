@@ -3,6 +3,9 @@ using Framework.Input;
 
 namespace Game;
 
+/// <summary>
+/// Defines the game-specific behavior hosted by the reusable framework lifecycle.
+/// </summary>
 public sealed class GameApplication : Engine
 {
     public GameApplication()
@@ -12,7 +15,7 @@ public sealed class GameApplication : Engine
 
     protected override void OnInitialize()
     {
-        // Game initialization
+        // Create game-owned worlds, entities, assets, and other persistent state here.
     }
 
     protected override void OnUpdate()
@@ -25,11 +28,11 @@ public sealed class GameApplication : Engine
 
     protected override void OnRender()
     {
-
+        // Submit game-facing Renderer2D draw commands here once the frame API is available.
     }
 
     protected override void OnShutdown()
     {
-        // Game shutdown
+        // Release game-owned resources while engine subsystems are still available.
     }
 }
