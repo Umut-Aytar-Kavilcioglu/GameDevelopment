@@ -1,4 +1,4 @@
-namespace Framework.Inputs;
+namespace Framework.Input;
 
 public enum Key
 {

@@ -1,8 +1,8 @@
-using Framework.Binding;
+using Framework.Interop;
 
-namespace Framework.Inputs;
+namespace Framework.Input;
 
-public static class Input
+public static class Keyboard
 {
     private static readonly bool[] _currentKeys =
         new bool[(int)SDL3.SDL_Scancode.SDL_SCANCODE_COUNT];
