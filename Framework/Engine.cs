@@ -89,7 +89,7 @@ public abstract class Engine
 
                 Keyboard.Update();
                 OnUpdate(gameTime);
-                OnRender();
+                RenderFrame();
             }
         }
         finally
@@ -208,6 +208,24 @@ public abstract class Engine
         _frameCount++;
 
         return new GameTime((float)deltaTime, totalTime, _frameCount);
+    }
+
+    private void RenderFrame()
+    {
+        if (!Renderer2D.BeginFrame())
+        {
+            return;
+        }
+
+        // Frame ownership stays inside the engine so game code only submits drawing commands.
+        try
+        {
+            OnRender();
+        }
+        finally
+        {
+            Renderer2D.EndFrame();
+        }
     }
 
     private void ProcessEvents()

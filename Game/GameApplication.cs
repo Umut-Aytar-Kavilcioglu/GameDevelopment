@@ -29,7 +29,7 @@ public sealed class GameApplication : Engine
 
     protected override void OnRender()
     {
-        // Submit game-facing Renderer2D draw commands here once the frame API is available.
+        // Submit game-facing Renderer2D draw commands here; the engine owns the frame lifecycle.
     }
 
     protected override void OnShutdown()
