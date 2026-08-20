@@ -2,6 +2,9 @@
 bin/
 obj/
 
+# Project-owned generated SDL sources, native builds, and bundles
+.artifacts/
+
 # User-specific files
 *.user
 *.suo

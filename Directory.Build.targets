@@ -1,0 +1,38 @@
+<Project>
+
+  <PropertyGroup>
+    <_SdlHostArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)</_SdlHostArchitecture>
+    <_SdlHostPlatformRid Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(_SdlHostArchitecture)' == 'X86'">win-x86</_SdlHostPlatformRid>
+    <_SdlHostPlatformRid Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(_SdlHostArchitecture)' == 'X64'">win-x64</_SdlHostPlatformRid>
+    <_SdlHostPlatformRid Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(_SdlHostArchitecture)' == 'Arm64'">win-arm64</_SdlHostPlatformRid>
+    <_SdlHostPlatformRid Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$(_SdlHostArchitecture)' == 'X64'">linux-x64</_SdlHostPlatformRid>
+    <_SdlHostPlatformRid Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$(_SdlHostArchitecture)' == 'Arm64'">linux-arm64</_SdlHostPlatformRid>
+    <_SdlHostPlatformRid Condition="$([MSBuild]::IsOSPlatform('OSX')) And '$(_SdlHostArchitecture)' == 'X64'">osx-x64</_SdlHostPlatformRid>
+    <_SdlHostPlatformRid Condition="$([MSBuild]::IsOSPlatform('OSX')) And '$(_SdlHostArchitecture)' == 'Arm64'">osx-arm64</_SdlHostPlatformRid>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)ThirdParty/SDL3/SdlNative.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)ThirdParty/SDL3/SdlNative.props')" />
+
+  <Target Name="CopyProjectOwnedSdlNativeLibrary"
+          AfterTargets="Build"
+          Condition="('@(_SdlProjectNativeLibrary)' != '') And (('$(OutputType)' == 'Exe') Or ('$(OutputType)' == 'WinExe'))">
+    <Copy SourceFiles="@(_SdlProjectNativeLibrary)"
+          DestinationFolder="$(TargetDir)"
+          SkipUnchangedFiles="true" />
+    <Message Text="Project-owned SDL3 native library copied to $(TargetDir)"
+             Importance="normal" />
+  </Target>
+
+  <Target Name="IncludeProjectOwnedSdlNativeLibraryInPublish"
+          BeforeTargets="ComputeFilesToPublish"
+          Condition="('@(_SdlProjectNativeLibrary)' != '') And (('$(OutputType)' == 'Exe') Or ('$(OutputType)' == 'WinExe'))">
+    <ItemGroup>
+      <ResolvedFileToPublish Include="@(_SdlProjectNativeLibrary)">
+        <RelativePath>%(_SdlProjectNativeLibrary.TargetFileName)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
+</Project>

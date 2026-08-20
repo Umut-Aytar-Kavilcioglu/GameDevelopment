@@ -1,0 +1,124 @@
+name: SDL native runtimes
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Verify committed binding pin
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Verify binding provenance against manifest
+        run: dotnet run --project Tools/SdlToolchain -- verify-binding
+
+  native:
+    name: Native ${{ matrix.rid }}
+    needs: preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x86
+            runner: windows-2025
+          - rid: win-x64
+            runner: windows-2025
+          - rid: win-arm64
+            runner: windows-2025
+          - rid: linux-x64
+            runner: ubuntu-24.04
+          - rid: linux-arm64
+            runner: ubuntu-24.04-arm
+          - rid: osx-x64
+            runner: macos-26-intel
+          - rid: osx-arm64
+            runner: macos-26
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install full SDL Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes \
+            build-essential pkg-config cmake ninja-build \
+            libasound2-dev libpulse-dev libaudio-dev libfribidi-dev libjack-dev libsndio-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev \
+            libxss-dev libxtst-dev libxkbcommon-dev libdrm-dev libgbm-dev \
+            libgl1-mesa-dev libgles2-mesa-dev libegl1-mesa-dev libdbus-1-dev \
+            libibus-1.0-dev libudev-dev libthai-dev libusb-1.0-0-dev \
+            libpipewire-0.3-dev libwayland-dev libdecor-0-dev liburing-dev
+
+      - name: Build SDL native library
+        run: dotnet run --project Tools/SdlToolchain -- native --rid ${{ matrix.rid }} --allow-cross
+
+      - name: Upload native staging tree
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdl-native-${{ matrix.rid }}
+          path: .artifacts/sdl-toolchain/native
+          if-no-files-found: error
+          retention-days: 1
+
+  bundle:
+    name: Assemble tracked native bundle
+    needs: native
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: sdl-native-*
+          path: .artifacts/sdl-toolchain/native
+          merge-multiple: true
+
+      - name: Validate and create ThirdParty runtime tree
+        run: dotnet run --project Tools/SdlToolchain -- vendor
+
+      - name: Verify normal build copies the host runtime
+        run: |
+          dotnet build GameDevelopment.slnx --configuration Release
+          test -f Game/bin/Release/net10.0/libSDL3.so
+
+      - name: Verify publish copies the selected runtime
+        run: |
+          dotnet publish Game/Game.csproj \
+            --configuration Release \
+            --runtime linux-x64 \
+            --self-contained false \
+            --output .artifacts/sdl-toolchain/publish-test
+          test -f .artifacts/sdl-toolchain/publish-test/libSDL3.so
+
+      - name: Create downloadable repository bundle
+        run: |
+          mkdir -p .artifacts/sdl-toolchain/bundles
+          tar -czf .artifacts/sdl-toolchain/bundles/sdl3-native-bundle.tar.gz ThirdParty/SDL3
+
+      - name: Upload native bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdl-native-bundle
+          path: .artifacts/sdl-toolchain/bundles/sdl3-native-bundle.tar.gz
+          if-no-files-found: error
+          retention-days: 14

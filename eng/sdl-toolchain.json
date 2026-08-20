@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "artifactsDirectory": ".artifacts/sdl-toolchain",
+  "sdl": {
+    "version": "3.4.14",
+    "repository": "https://github.com/libsdl-org/SDL.git",
+    "ref": "refs/tags/release-3.4.14",
+    "commit": "147a8ee32dbf9ac02f3794964490687b6bbda1bc"
+  },
+  "bindings": {
+    "generatorRepository": "https://github.com/flibitijibibo/SDL3-CS.git",
+    "generatorCommit": "c42d07ed852beb522b0e3195ad0cc7884579ab0a",
+    "c2ffiRepository": "https://github.com/rpav/c2ffi.git",
+    "c2ffiCommit": "d6eba0d91dfd58831e5c3133e868c62892595680",
+    "c2ffiLlvmVersion": "18.1",
+    "namespace": "Framework.Interop",
+    "className": "SDL3",
+    "output": "Framework/Interop/SDL3.cs",
+    "headers": [
+      "SDL3/SDL.h",
+      "SDL3/SDL_main.h"
+    ],
+    "warningBaseline": {
+      "WARN_ANONYMOUS_FUNCTION_POINTER": 25,
+      "WARN_UNKNOWN_POINTER_PARAMETER": 48
+    }
+  },
+  "native": {
+    "vendorDirectory": "ThirdParty/SDL3",
+    "supportedRids": [
+      "win-x86",
+      "win-x64",
+      "win-arm64",
+      "linux-x64",
+      "linux-arm64",
+      "osx-x64",
+      "osx-arm64"
+    ]
+  }
+}
